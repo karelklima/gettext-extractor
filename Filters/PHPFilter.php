@@ -19,10 +19,10 @@ require_once dirname(__FILE__) . '/iFilter.php';
  */
 class PHPFilter implements iFilter
 {
-	/** @var array */
+    /** @var array */
     protected $functions = array(
-    	'translate' => 1,
-    	'_'	=> 1
+        'translate' => 1,
+        '_'    => 1
     );
     
     /**
@@ -33,8 +33,8 @@ class PHPFilter implements iFilter
      */
     public function addFunction($functionName, $argumentPosition = 1)
     {
-    	$this->functions[$functionName] = ceil((int) $argumentPosition);
-    	return $this;
+        $this->functions[$functionName] = ceil((int) $argumentPosition);
+        return $this;
     }
     
     /**
@@ -44,8 +44,8 @@ class PHPFilter implements iFilter
      */
     public function removeFunction($functionName)
     {
-    	unset($this->functions[$functionName]);
-    	return $this;
+        unset($this->functions[$functionName]);
+        return $this;
     }
     
     /**
@@ -54,15 +54,27 @@ class PHPFilter implements iFilter
      */
     public function removeAllFunctions()
     {
-    	$this->functions = array();
-    	return $this;
+        $this->functions = array();
+        return $this;
+    }
+
+    /**
+     * Removes backslashes from before primes and double primes in primed or double primed strings respectively
+     * @return string
+     */
+    public function fixEscaping($string)
+    {
+        $prime = substr($string, 0, 1);
+        $string = str_replace('\\' . $prime, $prime, $string);
+
+        return $string;
     }
     
     /**
-	 * Parses given file and returns found gettext phrases
-	 * @param string $file
-	 * @return array
-	 */
+     * Parses given file and returns found gettext phrases
+     * @param string $file
+     * @return array
+     */
     public function extract($file)
     {
         $pInfo = pathinfo($file);
@@ -78,7 +90,7 @@ class PHPFilter implements iFilter
                     continue;
                 }
                 if ($c[0] == T_CONSTANT_ENCAPSED_STRING && $next == 1) {
-                    $data[substr($c[1], 1, -1)][] = $pInfo['basename'] . ':' . $c[2];
+                    $data[substr($this->fixEscaping($c[1]), 1, -1)][] = $pInfo['basename'] . ':' . $c[2];
                     $next = false; 
                 }
             } else {
