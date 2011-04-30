@@ -23,45 +23,57 @@ require_once dirname(__FILE__) . '/iFilter.php';
  */
 class NetteLatteFilter implements iFilter
 {
-	/** regex to match the curly brackets syntax */
-	const LATTE_REGEX = '#{(__PREFIXES__)("[^"\\\\]*(?:\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')+(\|[a-z]+(:[a-z0-9]+)*)*}#u';
-	/** @var array */
-	protected $prefixes = array('!_', '_');
-	
-	/**
-	 * Mandatory work...
-	 */
-	public function __construct()
-	{
-		// Flips the array so we can use it more effectively
-		$this->prefixes = array_flip($this->prefixes);
-	}
-	
-	/**
-	 * Includes a prefix to match in { }
-	 * @param string $prefix
-	 * @return NetteLatteFilter
-	 */
-	public function addPrefix($prefix) {
-		$this->prefixes[$prefix] = TRUE;
-		return $this;
-	}
-	
-	/**
-	 * Excludes a prefix from { }
-	 * @param string $prefix
-	 * @return NetteLatteFilter
-	 */
-	public function removePrefix($prefix) {
-		unset($this->prefixes[$prefix]);
-		return $this;
-	}
-	
-	/**
-	 * Parses given file and returns found gettext phrases
-	 * @param string $file
-	 * @return array
-	 */
+    /** regex to match the curly brackets syntax */
+    const LATTE_REGEX = '#{(__PREFIXES__)("[^"\\\\]*(?:\\\\.[^"\\\\]*)*"|\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')+(\|[a-z]+(:[a-z0-9]+)*)*}#u';
+    /** @var array */
+    protected $prefixes = array('!_', '_');
+    
+    /**
+     * Mandatory work...
+     */
+    public function __construct()
+    {
+        // Flips the array so we can use it more effectively
+        $this->prefixes = array_flip($this->prefixes);
+    }
+    
+    /**
+     * Includes a prefix to match in { }
+     * @param string $prefix
+     * @return NetteLatteFilter
+     */
+    public function addPrefix($prefix) {
+        $this->prefixes[$prefix] = TRUE;
+        return $this;
+    }
+    
+    /**
+     * Excludes a prefix from { }
+     * @param string $prefix
+     * @return NetteLatteFilter
+     */
+    public function removePrefix($prefix) {
+        unset($this->prefixes[$prefix]);
+        return $this;
+    }
+
+    /**
+     * Removes backslashes from before primes and double primes in primed or double primed strings respectively
+     * @return string
+     */
+    public function fixEscaping($string)
+    {
+        $prime = substr($string, 0, 1);
+        $string = str_replace('\\' . $prime, $prime, $string);
+
+        return $string;
+    }
+    
+    /**
+     * Parses given file and returns found gettext phrases
+     * @param string $file
+     * @return array
+     */
     public function extract($file)
     {
         $pInfo = pathinfo($file);
@@ -77,8 +89,8 @@ class NetteLatteFilter implements iFilter
             if (empty($matches[2])) continue;
             
             foreach ($matches[2] as $m) {
-            	// strips trailing apostrophes or double quotes
-            	$data[substr($m, 1, -1)][] = $pInfo['basename'] . ':' . $line;
+                // strips trailing apostrophes or double quotes
+                $data[substr($this->fixEscaping($m), 1, -1)][] = $pInfo['basename'] . ':' . $line;
             }
         }
         return $data;
