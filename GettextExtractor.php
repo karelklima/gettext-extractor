@@ -139,6 +139,7 @@ class GettextExtractor
 		
 		while (FALSE !== ($entry = $iterator->read())) {
 			if ($entry == '.' || $entry == '..') continue;
+			if ($entry[0] == '.') continue; // do not browse into .git directories
 
 			$path = $resource . '/' . $entry;
 			if (!is_readable($path)) continue;
@@ -150,6 +151,7 @@ class GettextExtractor
 
 			if (is_file($path)) {
 				$info = pathinfo($path);
+				if (!isset($info['extension'])) continue; // "lockfile" has no extension.. raises notice
 				if (!isset($this->filters[$info['extension']])) continue;
 				$this->inputFiles[] = realpath($path);
 			}
